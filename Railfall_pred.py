@@ -29,6 +29,7 @@ S0['TOTAL_CALCULATED'] = S0[monthly_cols].sum(axis=1)
 S0['DIFFERENCE'] = S0['ANNUAL'] - S0['TOTAL_CALCULATED']
 
 print(S0['DIFFERENCE'].describe())
+
 S0['ANNUAL'] = S0[monthly_cols].sum(axis=1)
 S0['Jan-Feb'] = S0['JAN'] + S0['FEB']
 S0['Mar-May'] = S0['MAR'] + S0['APR'] + S0['MAY']
@@ -108,8 +109,6 @@ plt.yticks(rotation=0)
 plt.title('Heatmap of Annual and Seasonal Rainfall')
 plt.show()
 
-
-# STEP 4 - MACHINE LEARNING
 plt.figure(figsize=(6,4))
 sns.scatterplot(x=S0['Jun-Sep'], y=S0['ANNUAL'])
 plt.title("Jun-Sep vs Annual Rainfall")
@@ -117,13 +116,35 @@ plt.xlabel("Monsoon Rainfall")
 plt.ylabel("Annual Rainfall")
 plt.show()
 
+# STEP 4 - MACHINE LEARNING
 
 
-# STEP 1: Copy cleaned data into S1 (IMPORTANT)
+# STEP 4.1: Copy cleaned data into S1 (IMPORTANT)
+
 S1 = S0.copy()
 S1 = S1.sort_values(['SUBDIVISION','YEAR'])
 S1['NEXT_YEAR_RAIN'] = S1.groupby('SUBDIVISION')['ANNUAL'].shift(-1)
 S1.dropna(inplace=True)
+    
+
+new_cols=['ANNUAL']
+outliers=[]
+for col in new_cols:
+    Q1=S1[col].quantile(0.25)#it marks the point below which 25% of the data falls.
+    Q3=S1[col].quantile(0.75)#it marks the point below which 75% of the data falls.
+    IQR=Q3-Q1
+    lower_bound=Q1-1.5*IQR
+    upper_bound=Q3+1.5*IQR
+    outliers.extend(S1[(S1[col]<lower_bound)|(S1[col]>upper_bound)].index)
+S1=S1.drop(set(outliers))
+
+plt.figure(figsize=(6,4))
+sns.scatterplot(x=S1['ANNUAL'], y=S1['NEXT_YEAR_RAIN'])
+plt.title("ANNUAL vs NEXT_YEAR_RAIN")
+plt.xlabel("ANNUAL Rainfall")
+plt.ylabel("NEXT_YEAR Rainfall")
+plt.show()
+
 
 X = S1[['ANNUAL']]
 y = S1['NEXT_YEAR_RAIN']
@@ -146,3 +167,7 @@ print("Predicted Next Year Rainfall:", result[0])
 y_pred = model.predict(x_test)
 mse = mean_squared_error(y_test, y_pred)
 print(f"Mean Squared Error (MSE): {mse:.2f}")
+
+from sklearn.metrics import r2_score
+print("R2 Score:", r2_score(y_test, y_pred))
+
