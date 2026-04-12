@@ -29,7 +29,11 @@ S0['TOTAL_CALCULATED'] = S0[monthly_cols].sum(axis=1)
 S0['DIFFERENCE'] = S0['ANNUAL'] - S0['TOTAL_CALCULATED']
 
 print(S0['DIFFERENCE'].describe())
-S0['ANNUAL'] = np.where(abs(S0['DIFFERENCE']) > 100,S0['TOTAL_CALCULATED'],S0['ANNUAL'])
+S0['ANNUAL'] = S0[monthly_cols].sum(axis=1)
+S0['Jan-Feb'] = S0['JAN'] + S0['FEB']
+S0['Mar-May'] = S0['MAR'] + S0['APR'] + S0['MAY']
+S0['Jun-Sep'] = S0['JUN'] + S0['JUL'] + S0['AUG'] + S0['SEP']
+S0['Oct-Dec'] = S0['OCT'] + S0['NOV'] + S0['DEC']
 
 # Rainfall intensity category
 def rainfall_label(x):
@@ -65,7 +69,7 @@ plt.show()
 
 
 plt.figure(figsize=(8,5))
-sns.histplot(S0['ANNUAL'], bins=30, kde=True)
+sns.histplot(S0['ANNUAL'], bins=30, kde=False)
 plt.title("Distribution of Annual Rainfall")
 plt.xlabel("Rainfall")
 plt.ylabel("Frequency")
@@ -121,8 +125,7 @@ S1 = S1.sort_values(['SUBDIVISION','YEAR'])
 S1['NEXT_YEAR_RAIN'] = S1.groupby('SUBDIVISION')['ANNUAL'].shift(-1)
 S1.dropna(inplace=True)
 
-cols = ['ANNUAL','Jan-Feb','Mar-May','Jun-Sep','Oct-Dec']
-X = S1[cols]
+X = S1[['ANNUAL']]
 y = S1['NEXT_YEAR_RAIN']
 
 x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=34)
@@ -134,13 +137,7 @@ x_test = scaler.transform(x_test)
 model = LinearRegression()
 model.fit(x_train, y_train)
 
-new_data = pd.DataFrame({
-    'ANNUAL':[1500],
-    'Jan-Feb':[50],
-    'Mar-May':[200],
-    'Jun-Sep':[900],
-    'Oct-Dec':[300]
-})
+new_data = pd.DataFrame({'ANNUAL':[3373.2]})
 
 new_scaled = scaler.transform(new_data)
 result = model.predict(new_scaled)
@@ -148,22 +145,4 @@ print("Predicted Next Year Rainfall:", result[0])
 
 y_pred = model.predict(x_test)
 mse = mean_squared_error(y_test, y_pred)
-print(f"Mean Squared Error (MSE): {mse:.4f}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+print(f"Mean Squared Error (MSE): {mse:.2f}")
