@@ -147,14 +147,12 @@ plt.show()
 
 
 X = S1[['ANNUAL']]
-y = S1['NEXT_YEAR_RAIN']
+Y = S1['NEXT_YEAR_RAIN']
+scaler=MinMaxScaler()
+X=scaler.fit_transform(X)
+x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=34)
 
-x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=34)
 
-
-scaler = MinMaxScaler()
-x_train = scaler.fit_transform(x_train)
-x_test = scaler.transform(x_test)
 model = LinearRegression()
 model.fit(x_train, y_train)
 
@@ -170,4 +168,26 @@ print(f"Mean Squared Error (MSE): {mse:.2f}")
 
 from sklearn.metrics import r2_score
 print("R2 Score:", r2_score(y_test, y_pred))
+
+plt.scatter(X, Y,color='blue')
+plt.plot(X, model.predict(X), color='pink', linewidth=5)
+plt.xlabel("ANNUAL")
+plt.ylabel("NEXT_YEAR")
+plt.title("Linear regression fit")
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
